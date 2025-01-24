@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	kafka_broker "microservice/kafka-broker"
+	kafkabroker "microservice/kafka-broker"
 	"microservice/model"
 	"net/http"
-	"strconv"
 )
 
 func registerUser(c *gin.Context) {
@@ -23,7 +22,7 @@ func registerUser(c *gin.Context) {
 		return
 	}
 
-	err = kafka_broker.PushUserToQueue("user_register", userInBytes)
+	err = kafkabroker.PushUserToQueue("user_register", userInBytes)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Failed to push user to queue": err.Error()})
 		return
@@ -31,7 +30,7 @@ func registerUser(c *gin.Context) {
 
 	response := map[string]interface{}{
 		"success": true,
-		"msg":     strconv.FormatInt(user.ID, 10) + user.Username + "was successfully registered",
+		//"msg":     strconv.FormatInt(user.ID, 10) + user.Username + "was successfully registered",
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -44,8 +43,7 @@ func main() {
 
 	router.POST("/user", registerUser)
 
-	// Запуск горутины для потребления сообщений
-	go kafka_broker.ConsumeMessage("user_register")
+	kafkabroker.ConsumeMessage("user_recommendation")
 
 	router.Run(":8081")
 
